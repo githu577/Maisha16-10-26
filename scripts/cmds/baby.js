@@ -153,7 +153,7 @@ module.exports.onChat = async ({ api, event }) => {
         if (!event.body) return;
         const body = event.body.toLowerCase();
         
-        if (body.startsWith("baby") || body.startsWith("bby") || body.startsWith("bot") || body.startsWith("maisha") || body.startsWith("babu") || body.startsWith("janu")) {
+        if (body.startsWith("baby") || body.startsWith("bby") || body.startsWith("bot") || body.startsWith("sizuka") || body.startsWith("babu") || body.startsWith("janu")) {
             const arr = body.replace(/^\S+\s*/, "").trim();
 
             const randomReplies = [
