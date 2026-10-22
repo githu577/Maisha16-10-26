@@ -7,7 +7,7 @@ module.exports = {
 config: {
 name: "create",
 aliases: ["edit"],
-version: "11.0.0",
+version: "12.0.0",
 author: "EGO",
 countDown: 5,
 role: 0,
@@ -20,79 +20,42 @@ guide: "{pn} [prompt]"
 onStart: async function ({ api, event, args }) {
 const { threadID, messageID, messageReply } = event;
 let loadingID = null;
-let progressTimer = null;
-let finished = false;
 
 const react = emoji => {
   try {
-    api.setMessageReaction(
-      emoji,
-      messageID,
-      () => {},
-      true
-    );
+    api.setMessageReaction(emoji, messageID, () => {}, true);
   } catch (_) {}
 };
 
 const send = body =>
   new Promise(resolve => {
-    api.sendMessage(
-      body,
-      threadID,
-      () => resolve(),
-      messageID
-    );
+    api.sendMessage(body, threadID, () => resolve(), messageID);
   });
 
 const sleep = ms =>
   new Promise(resolve => setTimeout(resolve, ms));
 
-// Exactly 5 stages; every bar contains 10 blocks.
 const stages = [
-  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n" +
-  "⏳ 𝐋𝐎𝐀𝐃𝐈𝐍𝐆 20%\n" +
-  "▰▰▱▱▱▱▱▱▱▱",
-
-  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n" +
-  "⏳ 𝐋𝐎𝐀𝐃𝐈𝐍𝐆 40%\n" +
-  "▰▰▰▰▱▱▱▱▱▱",
-
-  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n" +
-  "⏳ 𝐋𝐎𝐀𝐃𝐈𝐍𝐆 60%\n" +
-  "▰▰▰▰▰▰▱▱▱▱",
-
-  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n" +
-  "⏳ 𝐋𝐎𝐀𝐃𝐈𝐍𝐆 80%\n" +
-  "▰▰▰▰▰▰▰▰▱▱",
-
-  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n" +
-  "✅ 𝐋𝐎𝐀𝐃𝐈𝐍𝐆 100%\n" +
-  "▰▰▰▰▰▰▰▰▰▰"
+  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n▰▰▱▱▱▱▱▱▱▱ 20%",
+  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n▰▰▰▰▱▱▱▱▱▱ 40%",
+  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n▰▰▰▰▰▰▱▱▱▱ 60%",
+  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n▰▰▰▰▰▰▰▰▱▱ 80%",
+  "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n▰▰▰▰▰▰▰▰▰▰ 100%"
 ];
 
 const editLoading = body =>
   new Promise(resolve => {
-    if (
-      !loadingID ||
-      typeof api.editMessage !== "function"
-    ) {
+    if (!loadingID || typeof api.editMessage !== "function") {
       return resolve(false);
     }
 
     api.editMessage(body, loadingID, err => {
-      if (err) {
-        console.log("EGO LOADING ERROR:", err.message);
-      }
+      if (err) console.log("EGO LOADING:", err.message);
       resolve(!err);
     });
   });
 
 const removeLoading = async () => {
-  if (progressTimer) {
-    clearInterval(progressTimer);
-    progressTimer = null;
-  }
-
   if (!loadingID) return;
 
   const id = loadingID;
@@ -110,57 +73,38 @@ try {
 
   if (!prompt) {
     return send(
-      "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n" +
-      "━━━━━━━━━━━━━━━━━━\n\n" +
-      "🖼️ ছবিতে Reply দিয়ে লিখো:\n\n" +
-      "-create cinematic lighting\n" +
-      "-create change background to night\n" +
-      "-create make it realistic"
+      "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n\n" +
+      "ছবিতে Reply দিয়ে লিখো:\n" +
+      "-create cinematic lighting"
     );
   }
 
-  const attachments =
-    messageReply?.attachments || [];
-
+  const attachments = messageReply?.attachments || [];
   const image = attachments.find(item =>
     ["photo", "image"].includes(item.type) ||
     /\.(jpe?g|png|webp)(\?|$)/i.test(item.url || "")
   );
 
   if (!image?.url) {
-    return send(
-      "🖼️ প্রথমে একটি ছবিতে Reply দাও!\n" +
-      "তারপর লিখো: -create your prompt"
-    );
+    return send("🖼️ ছবিতে Reply দিয়ে -create prompt লিখো।");
   }
 
   const enhancedPrompt =
     "Follow this image editing request accurately. " +
     "User request: " + prompt + ". " +
-    "Preserve the original person's identity and facial " +
-    "features. Change only requested elements. " +
-    "Use realistic lighting, natural colors and professional details.";
+    "Preserve the original person's identity and facial features. " +
+    "Change only requested elements. Use realistic lighting, " +
+    "natural colors and professional details.";
 
-  // Send the first loading stage immediately.
   loadingID = await new Promise(resolve => {
-    api.sendMessage(
-      stages[0],
-      threadID,
-      (err, info) => {
-        if (err) {
-          console.log("EGO LOADING SEND:", err.message);
-          return resolve(null);
-        }
-
-        resolve(info?.messageID || null);
-      },
-      messageID
-    );
+    api.sendMessage(stages[0], threadID, (err, info) => {
+      resolve(err ? null : info?.messageID || null);
+    }, messageID);
   });
 
   react("⏳");
 
-  // Start the API request immediately.
+  // Exact API from your edit2.js
   const apiPromise = axios.get(API_URL, {
     params: {
       url: image.url,
@@ -175,44 +119,29 @@ try {
     }
   });
 
-  // Exactly 4 edits after the initial stage = 5 stages total.
-  // Fast animation; no unnecessary long waiting.
+  // Five loading stages, fast updates.
   for (let i = 1; i < stages.length; i++) {
     await sleep(250);
     await editLoading(stages[i]);
   }
 
-  // Wait for the real API result.
   const response = await apiPromise;
-  finished = true;
-
-  if (progressTimer) {
-    clearInterval(progressTimer);
-    progressTimer = null;
-  }
-
   const buffer = Buffer.from(response.data || []);
-  const contentType = String(
-    response.headers?.["content-type"] || ""
-  ).toLowerCase();
 
-  // Verify actual image format.
   let ext = null;
 
   if (
     buffer.length >= 8 &&
     buffer.subarray(0, 8).equals(
-      Buffer.from([
-        137, 80, 78, 71, 13, 10, 26, 10
-      ])
+      Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
     )
   ) {
     ext = "png";
   } else if (
     buffer.length >= 3 &&
-    buffer[0] === 0xFF &&
-    buffer[1] === 0xD8 &&
-    buffer[2] === 0xFF
+    buffer[0] === 255 &&
+    buffer[1] === 216 &&
+    buffer[2] === 255
   ) {
     ext = "jpg";
   } else if (
@@ -232,21 +161,14 @@ try {
     console.error(
       "EGO API ERROR:",
       response.status,
-      contentType,
       buffer.toString("utf8").slice(0, 200)
     );
 
     await removeLoading();
     react("❌");
-
-    return send(
-      "❌ 𝐄𝐆𝐎 𝐀𝐈 — 𝐀𝐏𝐈 𝐄𝐑𝐑𝐎𝐑\n\n" +
-      "API থেকে valid image পাওয়া যায়নি।\n" +
-      "কিছুক্ষণ পরে আবার চেষ্টা করো।"
-    );
+    return send("❌ API থেকে ছবি পাওয়া যায়নি। পরে আবার চেষ্টা করো।");
   }
 
-  // Remove loading before sending the edited image.
   await removeLoading();
 
   const stream = Readable.from(buffer);
@@ -258,16 +180,13 @@ try {
         body:
           "⚡ 𝐄𝐆𝐎 𝐀𝐈 — 𝐍𝐄𝐎𝐍 𝐏𝐑𝐎\n" +
           "━━━━━━━━━━━━━━━━━━\n" +
-          "✅ 𝐄𝐃𝐈𝐓 𝐂𝐎𝐌𝐏𝐋𝐄𝐓𝐄\n\n" +
-          "🎨 𝐏𝐑𝐎𝐌𝐏𝐓: " + prompt + "\n" +
-          "🔥 𝐏𝐎𝐖𝐄𝐑𝐄𝐃 𝐁𝐘 𝐄𝐆𝐎",
+          "✅ 𝐈𝐌𝐀𝐆𝐄 𝐄𝐃𝐈𝐓𝐄𝐃\n\n" +
+          "🎨 Prompt: " + prompt + "\n" +
+          "🔥 Powered by EGO",
         attachment: stream
       },
       threadID,
-      err => {
-        if (err) return reject(err);
-        resolve();
-      },
+      err => err ? reject(err) : resolve(),
       messageID
     );
   });
@@ -275,23 +194,11 @@ try {
   react("✅");
 
 } catch (error) {
-  finished = true;
-
-  if (progressTimer) {
-    clearInterval(progressTimer);
-    progressTimer = null;
-  }
-
   console.error("EGO CREATE ERROR:", error.message);
-
   await removeLoading();
   react("❌");
 
-  await send(
-    "❌ 𝐄𝐆𝐎 𝐀𝐈 — 𝐄𝐃𝐈𝐓 𝐅𝐀𝐈𝐋𝐄𝐃\n\n" +
-    "API অথবা Messenger-এ সমস্যা হয়েছে।\n" +
-    "আবার চেষ্টা করো।"
-  );
+  return send("❌ Editing failed. আবার চেষ্টা করো।");
 }
 
 }
